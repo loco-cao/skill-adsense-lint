@@ -13,13 +13,28 @@
     "lint": "echo 'No linter configured'",
     "test": "echo 'No tests configured'"
   },
+  "files": [
+    "dist",
+    "bin",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "adsense",
     "google",
     "lint",
     "cli"
   ],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loco-cao/adsense-lint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/loco-cao/adsense-lint/issues"
+  },
+  "homepage": "https://github.com/loco-cao/adsense-lint#readme",
+  "author": "lococao <loco97642110@gmail.com>",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
