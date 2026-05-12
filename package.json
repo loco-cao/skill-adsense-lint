@@ -1,0 +1,35 @@
+{
+  "name": "adsense-lint",
+  "version": "0.1.0",
+  "description": "Check if your website meets Google AdSense approval requirements",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "adsense-lint": "./bin/adsense-lint.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "echo 'No linter configured'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "adsense",
+    "google",
+    "lint",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "fast-glob": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}
