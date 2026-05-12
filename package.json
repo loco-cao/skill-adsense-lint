@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/cli.js",
   "bin": {
-    "adsense-lint": "./bin/adsense-lint.js"
+    "adsense-lint": "bin/adsense-lint.js"
   },
   "scripts": {
     "build": "tsc",

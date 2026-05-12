@@ -29,3 +29,5 @@ test-site/
 test-nextjs/
 test-bad/
 .tmp/
+
+docs/
