@@ -1,6 +1,6 @@
 {
   "name": "adsense-lint",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Check if your website meets Google AdSense approval requirements",
   "type": "module",
   "main": "dist/cli.js",
