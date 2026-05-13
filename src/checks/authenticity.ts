@@ -32,7 +32,6 @@ const FAKE_ADDRESS_PATTERNS = [
   'sample address',
   'your city',
   'your country',
-  'your address',
   '123 anywhere',
 ];
 
@@ -266,17 +265,22 @@ export const authenticityCheck: Check = {
       fixable: false,
     });
 
-    const score = Math.max(0, WEIGHT - Math.min(totalDeduction, maxDeduction));
+    const score = Math.max(0, 100 - (Math.min(totalDeduction, maxDeduction) / maxDeduction) * 100);
 
     return {
       name: this.name,
       weight: WEIGHT,
-      passed: score >= WEIGHT * 0.7,
+      passed: score >= 70,
       score: Math.round(score),
       issues,
     };
   },
 };
+
+const GENERIC_TITLES = new Set([
+  'us', 'home', 'page', 'information', 'details', 'more', 'here',
+  'welcome', 'overview', 'introduction',
+]);
 
 function detectBrandMismatches(context: CheckContext): string[] {
   const mismatches: string[] = [];
@@ -294,7 +298,14 @@ function detectBrandMismatches(context: CheckContext): string[] {
   if (aboutTitle && contactTitle && aboutTitle !== contactTitle) {
     const aboutBase = aboutTitle.replace(/^(about|contact|privacy|terms)\s*[\|\-–]\s*/i, '').trim();
     const contactBase = contactTitle.replace(/^(about|contact|privacy|terms)\s*[\|\-–]\s*/i, '').trim();
-    if (aboutBase && contactBase && aboutBase !== contactBase) {
+    // Skip if one side resolves to a generic title (not a brand name)
+    if (
+      aboutBase &&
+      contactBase &&
+      aboutBase !== contactBase &&
+      !GENERIC_TITLES.has(aboutBase.toLowerCase()) &&
+      !GENERIC_TITLES.has(contactBase.toLowerCase())
+    ) {
       mismatches.push(`Brand name mismatch: About page title "${aboutBase}" vs Contact page title "${contactBase}"`);
     }
   }

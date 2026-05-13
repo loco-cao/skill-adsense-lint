@@ -53,12 +53,12 @@ export const contentQualityCheck: Check = {
       }
     }
 
-    const score = Math.max(0, WEIGHT - Math.min(totalDeduction, maxDeduction));
+    const score = Math.max(0, 100 - (Math.min(totalDeduction, maxDeduction) / maxDeduction) * 100);
 
     return {
       name: this.name,
       weight: WEIGHT,
-      passed: score >= WEIGHT * 0.7,
+      passed: score >= 70,
       score: Math.round(score),
       issues,
     };

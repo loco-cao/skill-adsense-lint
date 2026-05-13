@@ -64,11 +64,16 @@ function reportConsole(results: CheckResult[], fixableCount: number): void {
 
   const selfChecks: Array<{ question: string; impact: string }> = [];
 
+  console.log(`${'Dimension'.padEnd(18)} ${'Raw Score'.padEnd(12)} ${'Weight'.padEnd(10)} ${'Weighted'.padEnd(10)} Status`);
+  console.log(`${'-'.repeat(18)} ${'-'.repeat(12)} ${'-'.repeat(10)} ${'-'.repeat(10)} ${'-'.repeat(6)}`);
+
   for (const result of results) {
     const checkIcon = result.passed ? '✓' : '❌';
     const paddedName = result.name.padEnd(18, ' ');
-    const scoreStr = `[${result.score}/${result.weight}]`.padEnd(8, ' ');
-    console.log(`${paddedName} ${scoreStr} ${checkIcon}`);
+    const rawScore = `${result.score}/100`.padEnd(12, ' ');
+    const weightStr = `${result.weight}%`.padEnd(10, ' ');
+    const weighted = ((result.score * result.weight) / 100).toFixed(1).padEnd(10, ' ');
+    console.log(`${paddedName} ${rawScore} ${weightStr} ${weighted} ${checkIcon}`);
 
     const autoIssues = result.issues.filter((i) => !i.message.startsWith('[Self-Check]'));
     const resultSelfChecks = result.issues.filter((i) => i.message.startsWith('[Self-Check]'));
@@ -88,6 +93,13 @@ function reportConsole(results: CheckResult[], fixableCount: number): void {
       });
     }
   }
+
+  console.log(`${'-'.repeat(18)} ${'-'.repeat(12)} ${'-'.repeat(10)} ${'-'.repeat(10)}`);
+  const totalStr = 'Total'.padEnd(18, ' ');
+  const blank1 = ''.padEnd(12, ' ');
+  const blank2 = ''.padEnd(10, ' ');
+  const totalWeighted = Math.round(totalScore).toString().padEnd(10, ' ');
+  console.log(`${totalStr} ${blank1} ${blank2} ${totalWeighted}`);
 
   if (selfChecks.length > 0) {
     console.log('');

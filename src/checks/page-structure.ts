@@ -51,12 +51,12 @@ export const pageStructureCheck: Check = {
       if (totalDeduction >= maxDeduction) break;
     }
 
-    const score = Math.max(0, WEIGHT - Math.min(totalDeduction, maxDeduction));
+    const score = Math.max(0, 100 - (Math.min(totalDeduction, maxDeduction) / maxDeduction) * 100);
 
     return {
       name: this.name,
       weight: WEIGHT,
-      passed: score >= WEIGHT * 0.7,
+      passed: score >= 70,
       score: Math.round(score),
       issues,
     };
@@ -65,7 +65,12 @@ export const pageStructureCheck: Check = {
 
 function hasTitleTag(content: string, projectType: CheckContext['projectType']): boolean {
   if (projectType === 'nextjs-app') {
+    // export const metadata = { title: ... }
     if (/export\s+const\s+metadata\s*[:=]/s.test(content)) {
+      if (/title\s*:/.test(content)) return true;
+    }
+    // export async function generateMetadata() { return { title: ... } }
+    if (/export\s+(async\s+)?function\s+generateMetadata/s.test(content)) {
       if (/title\s*:/.test(content)) return true;
     }
   }
@@ -76,7 +81,12 @@ function hasTitleTag(content: string, projectType: CheckContext['projectType']):
 
 function hasMetaDescription(content: string, projectType: CheckContext['projectType']): boolean {
   if (projectType === 'nextjs-app') {
+    // export const metadata = { description: ... }
     if (/export\s+const\s+metadata\s*[:=]/s.test(content)) {
+      if (/description\s*:/.test(content)) return true;
+    }
+    // export async function generateMetadata() { return { description: ... } }
+    if (/export\s+(async\s+)?function\s+generateMetadata/s.test(content)) {
       if (/description\s*:/.test(content)) return true;
     }
   }

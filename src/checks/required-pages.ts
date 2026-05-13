@@ -23,8 +23,15 @@ export const requiredPagesCheck: Check = {
       }
     }
 
-    const score = Math.max(0, WEIGHT - issues.length * (WEIGHT / REQUIRED_PAGES.length));
-    const passed = issues.length === 0;
+    const score = Math.max(0, 100 - issues.length * (100 / REQUIRED_PAGES.length));
+    const passed = score >= 70;
+
+    if (score === 100) {
+      issues.unshift({
+        message: 'All 4 required pages exist (about, privacy, contact, terms)',
+        fixable: false,
+      });
+    }
 
     return {
       name: this.name,

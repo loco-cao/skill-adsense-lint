@@ -31,24 +31,31 @@ $ npx adsense-lint
 
 AdSense Readiness Score: 62/100 ❌
 
-Required Pages     [15/30]  ❌
-  → Missing /contact page
-  → Missing /terms page
-Cookie Consent     [0/10]   ❌
-  → No cookie consent mechanism detected
-Page Structure     [15/15]  ✓
-Content Quality    [15/25]  ❌
+Dimension          Raw Score    Weight     Weighted   Status
+------------------ ------------ ---------- ---------- ------
+Required Pages     100/100      30%        30.0       ✓
+  → All 4 required pages exist (about, privacy, contact, terms)
+Content Quality    48/100       25%        12.0       ❌
   → /about content too short (105 words, minimum 300)
-Ads Placement      [5/5]    ✓
-Authenticity       [10/15]  ❌
+  → /blog contains placeholder text: "coming soon"
+Cookie Consent     0/100        10%        0.0        ❌
+  → No cookie consent mechanism detected
+Page Structure     80/100       15%        12.0       ✓
+  → Missing meta description on /contact
+Authenticity       53/100       15%        8.0        ❌
   → Detected placeholder email domain (@example.com)
+  → Copyright year 2022 is outdated
+Ads Placement      100/100      5%         5.0        ✓
+  → 2 AdSense units detected, placement OK
+------------------ ------------ ---------- ----------
+Total                                    67.0
 
 ────────────────────────────────────────
 Self-Assessment (requires manual review)
 ────────────────────────────────────────
 [?] Is all content original (not AI-spun or copied)? — impact: ±5 pts
 
-Run `npx adsense-lint --fix` to auto-fix 3 issues.
+Run `npx adsense-lint --fix` to auto-fix 2 issues.
 ```
 
 ## Features
@@ -133,9 +140,13 @@ When using `--pages-dir`, the tool infers the type from the target directory:
 
 ### Formula
 
+Every check is scored on a **0–100** scale first (its "raw score"), then weighted into the final total:
+
 ```
-totalScore = Σ (check.score × check.weight / 100)
+totalScore = Σ (check.rawScore × check.weight / 100)
 ```
+
+**Example:** Content Quality scores 40/100 and has a weight of 25 → contributes `40 × 25 / 100 = 10.0` points to the total.
 
 ### Grade Thresholds
 
@@ -162,7 +173,7 @@ totalScore = Σ (check.score × check.weight / 100)
 
 Checks for `/about`, `/privacy`, `/contact`, `/terms`.
 
-**Scoring:** `30 - missing_count × 7.5`
+**Raw score:** `100 - missing_count × 25` (4 pages, 25 pts each)
 
 **Auto-fixable:** Yes. `--fix` generates pages from `templates/`.
 
@@ -170,8 +181,8 @@ Checks for `/about`, `/privacy`, `/contact`, `/terms`.
 
 | Dimension | Threshold | Deduction |
 |-----------|-----------|-----------|
-| Word count too low | < 300 words | -5 per page |
-| Placeholder text | Detected | -5 per occurrence |
+| Word count too low | < 300 words | -20 raw points per page |
+| Placeholder text | Detected | -20 raw points per occurrence |
 
 **Placeholders detected:** `lorem ipsum`, `placeholder`, `todo`, `coming soon`, `under construction`, `insert text here`, `sample text`
 
@@ -179,7 +190,7 @@ Checks for `/about`, `/privacy`, `/contact`, `/terms`.
 
 ### Page Structure (weight: 15)
 
-Per-page checks for Title, Meta Description, and H1. Each missing item deducts 3 points.
+Per-page checks for Title, Meta Description, and H1. Each missing item deducts 20 raw points (capped at 100).
 
 **Auto-fixable:** No.
 
@@ -187,7 +198,7 @@ Per-page checks for Title, Meta Description, and H1. Each missing item deducts 3
 
 Scans all page sources for cookie-consent keywords (`gdpr`, `ccpa`, `cookie-banner`, etc.) and known libraries (`react-cookie-consent`, `cookiebot`, etc.).
 
-**Binary score:** 10 if detected, 0 if not.
+**Binary score:** 100 if detected, 0 if not.
 
 **Auto-fixable:** Yes. Generates a CookieBanner component or HTML snippet.
 
@@ -195,9 +206,9 @@ Scans all page sources for cookie-consent keywords (`gdpr`, `ccpa`, `cookie-bann
 
 | Dimension | Deduction |
 |-----------|-----------|
-| Ad near interactive elements (within 5 lines) | -5 per page |
-| Mobile ads > 2 | -5 |
-| No AdSense units detected | -5 |
+| Ad near interactive elements (within 5 lines) | -33 raw points per page |
+| Mobile ads > 2 | -33 raw points |
+| No AdSense units detected | -34 raw points |
 
 **Auto-fixable:** No.
 
@@ -207,18 +218,18 @@ Scans all page sources for cookie-consent keywords (`gdpr`, `ccpa`, `cookie-bann
 
 | Signal | Deduction |
 |--------|-----------|
-| Placeholder email (`@example.com`, etc.) | -3 |
-| Template placeholders (`{{date}}`, etc.) | -3 |
-| Fake address patterns | -2 |
-| Outdated copyright (> 2 years old) | -2 |
-| Brand name mismatch across pages | -2 |
-| Doorway page (< 50 words) | -3 |
-| Duplicate content (> 75% similarity) | -3 |
-| Images without `alt` | -2 |
-| Stock photo filenames | -2 |
-| AI-writing cliches (≥ 3 occurrences) | -2 |
-| Keyword stuffing (> 8% density) | -3 |
-| Hidden text via inline CSS | -3 |
+| Placeholder email (`@example.com`, etc.) | -20 raw points |
+| Template placeholders (`{{date}}`, etc.) | -20 raw points |
+| Fake address patterns | -13 raw points |
+| Outdated copyright (> 2 years old) | -13 raw points |
+| Brand name mismatch across pages | -13 raw points |
+| Doorway page (< 50 words) | -20 raw points |
+| Duplicate content (> 75% similarity) | -20 raw points |
+| Images without `alt` | -13 raw points |
+| Stock photo filenames | -13 raw points |
+| AI-writing cliches (≥ 3 occurrences) | -13 raw points |
+| Keyword stuffing (> 8% density) | -20 raw points |
+| Hidden text via inline CSS | -20 raw points |
 
 #### Self-Assessment (manual review required)
 
@@ -254,20 +265,31 @@ Produces:
 
 ```json
 {
-  "score": 62,
+  "score": 67,
   "pass": false,
   "grade": "FAIL",
   "checks": [
     {
       "name": "required-pages",
-      "score": 15,
+      "score": 100,
       "weight": 30,
+      "passed": true,
+      "issues": [
+        {
+          "message": "All 4 required pages exist (about, privacy, contact, terms)",
+          "fixable": false
+        }
+      ]
+    },
+    {
+      "name": "content-quality",
+      "score": 48,
+      "weight": 25,
       "passed": false,
       "issues": [
         {
-          "message": "Missing /contact page",
-          "fixable": true,
-          "template": "contact.md"
+          "message": "/about content too short (105 words, minimum 300)",
+          "fixable": false
         }
       ]
     }
