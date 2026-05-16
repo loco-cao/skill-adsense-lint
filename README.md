@@ -8,7 +8,7 @@ AIT 技能仓库。通过 [ai-terminal](https://github.com/lococao/ai-terminal) 
 
 ```bash
 # 1. 注册技能
-ait register gh:lococao/adsense-lint
+ait register gh:lococao/skill-adsense-lint
 
 # 2. 安装到 AI CLI
 ait install
