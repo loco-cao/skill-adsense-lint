@@ -32,3 +32,4 @@ test-bad/
 
 docs/
 .adsense-lint/
+.claude/settings.json
