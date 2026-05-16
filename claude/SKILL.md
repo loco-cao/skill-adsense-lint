@@ -78,7 +78,7 @@ Agent(subagent_type="ads-policy-expert", description="Policy audit",
   prompt="你是 AdSense 政策合规专家。这是本地代码审查——不要使用 WebFetch。使用 Read 和 Grep 扫描项目 <project_path> 中的所有 HTML/JSX/TSX/Vue/Markdown 文件。查找：禁止内容、隐藏文本、关键词堆砌、门页、重复内容。将结果写入 <SESSION_DIR>/01-policy/report.json。评分 0-100。输出合法 JSON。")
 ```
 
-**关键：每批 4 个 Agent 调用必须在同一轮中发出，利用并行 tool calls。两批之间串行，等第一批全部完成后再发第二批。不得使用 ads-orchestrator 中介 agent。**
+**关键：每批 4 个 Agent 调用必须在同一轮中发出，利用并行 tool calls。两批之间串行，等第一批全部完成后再发第二批。不得使用中介 agent 做编排。**
 
 ### 超时与重试
 

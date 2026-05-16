@@ -118,7 +118,7 @@ AIT CLI (PTY 伪终端)
 AI CLI (Claude Code / Codex)
   │  加载 SKILL.md
   ▼
-ads-orchestrator (评审主管)
+SKILL.md (直接编排)
   │  并行调度 8 位专家
   ├─ Policy      (22%, 否决权)
   ├─ E-E-A-T     (17%)
@@ -141,7 +141,7 @@ adsense-lint/
 ├── claude/
 │   ├── SKILL.md                      # 技能入口
 │   └── agents/
-│       ├── ads-orchestrator.md       # 评审主管
+
 │       ├── ads-policy-expert.md      # 政策合规
 │       ├── ads-eeat-expert.md        # E-E-A-T 评估
 │       ├── ads-content-expert.md     # 内容质量
@@ -181,7 +181,7 @@ adsense-lint/
 
 **Q: 可以添加自定义 Agent 吗？**
 
-可以。在 `claude/agents/` 下放入新 agent 文件，更新 orchestrator 的权重表和 workflow。
+可以。在 `claude/agents/` 下放入新 agent 文件，更新 `shared/adsense-lint.md` 中的权重表和编排逻辑。
 
 ## License
 
