@@ -30,7 +30,17 @@
 
 ## 会话设置
 
-为此审计会话定义一个本地工作目录：
+先清理之前不完整运行遗留的空 session 目录（无 agent 报告文件）：
+
+```
+for dir in .adsense-lint/session-*; do
+  if [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
+    rm -rf "$dir"
+  fi
+done 2>/dev/null
+```
+
+然后为此审计会话定义工作目录：
 
 ```
 SESSION_DIR=".adsense-lint/session-$(date +%Y%m%d-%H%M%S)"
