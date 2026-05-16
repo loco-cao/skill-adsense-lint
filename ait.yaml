@@ -1,0 +1,48 @@
+name: adsense-lint
+version: 0.2.0
+description: "AdSense 多专家 AI 审查系统 — 8 位领域专家并行审计网站或本地项目"
+argument-hint: "<url> [--auto] [--local]"
+
+targets:
+  claude:
+    trigger: /adsense-lint
+    path: assets/claude/skills/adsense-lint/SKILL.md
+    install:
+      - from: assets/claude/skills/adsense-lint
+        to: skills/adsense-lint
+      - from: assets/claude/agents
+        to: agents
+      - from: assets/references
+        to: skills/adsense-lint/references
+      - from: assets/workflows
+        to: skills/adsense-lint/workflows
+  cursor:
+    trigger: /adsense-lint
+    path: assets/cursor/skills-cursor/adsense-lint/SKILL.md
+    install:
+      - from: assets/cursor/skills-cursor/adsense-lint
+        to: skills-cursor/adsense-lint
+
+prompts:
+  - name: mode
+    type: select
+    message: "选择审计模式"
+    options:
+      - label: "远程 URL"
+        value: "<url>"
+      - label: "本地项目"
+        value: "--local"
+      - label: "自动模式 (跳过确认)"
+        value: "--auto"
+  - name: target_url
+    type: input
+    message: "输入目标网站 URL"
+    when:
+      field: mode
+      equals: "<url>"
+    validate: "^https?://"
+
+output_dir: .adsense-lint
+report_pattern: "*/report.json"
+global_timeout: 600
+agent_timeout: 120
