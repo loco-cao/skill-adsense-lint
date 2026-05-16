@@ -12,6 +12,20 @@ targets:
         to: skills/adsense-lint
       - from: claude/agents
         to: agents
+      - from: shared
+        to: skills/adsense-lint/shared
+      - from: references
+        to: skills/adsense-lint/references
+      - from: workflows
+        to: skills/adsense-lint/workflows
+  codex:
+    trigger: adsense-lint
+    path: codex/SYSTEM.md
+    install:
+      - from: codex
+        to: skills/adsense-lint
+      - from: shared
+        to: skills/adsense-lint/shared
       - from: references
         to: skills/adsense-lint/references
       - from: workflows
