@@ -1,35 +1,4 @@
-# Dependencies
-node_modules/
-
-# Build output
-dist/
-*.tsbuildinfo
-
-# Logs
-*.log
-npm-debug.log*
-
-# Environment
-.env
-.env.*
-!.env.example
-
-# OS
+.adsense-lint/
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Test / temp directories created during local dev
-test-site/
-test-nextjs/
-test-bad/
-.tmp/
-
-docs/
-.adsense-lint/
 .claude/settings.json

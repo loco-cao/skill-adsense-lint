@@ -6,22 +6,16 @@ argument-hint: "<url> [--auto] [--local]"
 targets:
   claude:
     trigger: /adsense-lint
-    path: assets/claude/skills/adsense-lint/SKILL.md
+    path: claude/SKILL.md
     install:
-      - from: assets/claude/skills/adsense-lint
+      - from: claude
         to: skills/adsense-lint
-      - from: assets/claude/agents
+      - from: claude/agents
         to: agents
-      - from: assets/references
+      - from: references
         to: skills/adsense-lint/references
-      - from: assets/workflows
+      - from: workflows
         to: skills/adsense-lint/workflows
-  cursor:
-    trigger: /adsense-lint
-    path: assets/cursor/skills-cursor/adsense-lint/SKILL.md
-    install:
-      - from: assets/cursor/skills-cursor/adsense-lint
-        to: skills-cursor/adsense-lint
 
 prompts:
   - name: mode
