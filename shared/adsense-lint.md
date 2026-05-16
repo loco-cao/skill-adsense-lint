@@ -89,15 +89,53 @@ SESSION_DIR/
 
 ---
 
-## 编排 — 分两批并行启动 8 位专家
+---
 
-**这是最关键的步骤。不要使用中间协调 agent！直接在当前上下文中分批并行启动 8 位专家。**
+## Agent 进度上报规范（所有 Agent 必须遵守）
 
-为避免单次并行过多导致 timeout，将 8 位专家分为两批，每批 4 个。第一批完成后立即启动第二批。
+每个 agent 在执行过程中必须在关键步骤更新进度文件。AIT 仪表盘会实时读取并显示当前步骤和进度百分比。
 
-### 第一批（轻量/中等负载）
+使用 Write 工具写入 `<your_assigned_dir>/status.json`，格式：
 
-在同一轮 tool calls 中并行发出以下 4 个调用：
+```json
+{"step": "<step_id>", "progress": <0.0-1.0>, "message": "<简短描述>", "ts": <Unix秒时间戳>}
+```
+
+**上报时机**（每个 agent 根据自身执行流程选择 4-5 个节点）：
+
+| step | progress | 触发时机 |
+|------|----------|---------|
+| `init` | 0.05 | 开始分析 |
+| `fetching` | 0.20 | 正在抓取页面/读取文件 |
+| `analyzing` | 0.50 | 正在分析数据 |
+| `scoring` | 0.80 | 正在计算评分 |
+| `writing` | 0.95 | 正在写入 report.json |
+
+**规则：**
+- 每个步骤只写一次，不要过度更新
+- 必须包含 `step` 和 `progress` 字段
+- `ts` 使用 `date +%s` 获取当前 Unix 时间戳
+- 进度百分比由 progress × 100 计算（0.05 = 5%，0.95 = 95%）
+
+---
+
+## 编排 — 自适应并行策略
+
+**这是最关键的步骤。不要使用中间协调 agent！直接在当前上下文中启动 8 位专家。**
+
+不同模型对 Agent() 调用的调度方式不同：部分模型（Claude、DeepSeek）能高效并行处理多个 sub-agent，另一些模型（Kimi 等）会将 sub-agent 串行排队。本策略通过第一批的完成时间自动探测并行能力，并调整第二批的调度方式。
+
+### 阶段 0：记录启动时间
+
+在发出第一批 Agent 调用之前，记录时间戳：
+
+```
+PARALLEL_CHECK_START=$(date +%s)
+```
+
+### 第一批（轻量/中等负载）— 强制 4 并行
+
+无论模型是否支持并行，第一批始终在同一轮 tool calls 中发出全部 4 个调用。**给每个 agent 的 prompt 末尾必须追加：**「执行期间在关键步骤（init→fetching→analyzing→scoring→writing）使用 Write 更新 `<your_dir>/status.json`（格式见 Agent 进度上报规范，共 4-5 次更新）。」
 
 | 专家 | 角色 | 权重 |
 |------|------|------|
@@ -126,9 +164,33 @@ SESSION_DIR/
 
 4. **Tech** — 分析 `<project_path>`。检查 HTTPS 配置、viewport meta、图片尺寸、alt 文本、robots.txt、sitemap.xml、可疑脚本、安全头。写入 `<SESSION_DIR>/07-tech/report.json`。
 
-### 第二批（重负载）
+### 并行度检测
 
-等待第一批全部完成后，在同一轮 tool calls 中并行发出以下 4 个调用：
+第一批全部完成后，计算耗时并判定模型调度能力：
+
+```
+BATCH1_ELAPSED=$(($(date +%s) - PARALLEL_CHECK_START))
+```
+
+**判定规则：**
+- `BATCH1_ELAPSED <= 300` → 模型支持并行（4 个 agent 在 5 分钟内全部完成），第二批保持 4 并行
+- `BATCH1_ELAPSED > 300` → 模型为串行调度，切换到逐个启动模式
+
+输出检测结果（嵌入进度面板）：
+
+```
+  ── Batch 1 completed in ${BATCH1_ELAPSED}s ──
+  Parallelism: <parallel|serial>
+  Strategy: <batch|sequential>
+```
+
+### 第二批（自适应策略）
+
+根据并行度检测结果，选择以下路径之一：
+
+#### 并行路径（BATCH1_ELAPSED <= 300）
+
+在同一轮 tool calls 中并行发出以下 4 个调用。**给每个 agent 的 prompt 末尾必须追加：**「执行期间在关键步骤（init→fetching→analyzing→scoring→writing）使用 Write 更新 `<your_dir>/status.json`（格式见 Agent 进度上报规范，共 4-5 次更新）。」
 
 | 专家 | 角色 | 权重 |
 |------|------|------|
@@ -157,11 +219,45 @@ SESSION_DIR/
 
 8. **Legal** — 检查 `<project_path>` 中的法律页面（privacy/terms/about/contact）。检查必需页面存在性、条款深度、DMCA、真实联系信息。写入 `<SESSION_DIR>/08-legal/report.json`。
 
+#### 串行路径（BATCH1_ELAPSED > 300）
+
+模型不支持并行，逐个启动第二批 agent。每完成一个立即输出进度并启动下一个，避免单轮堆积多个 agent 导致的累积超时。
+
+按以下顺序逐个启动（直接在当前对话中执行，不要使用中间 agent）。每个 agent 的 prompt 同样须追加心跳指令（见 Agent 进度上报规范）。
+
+**第 1 个 — Content（15%）**
+启动 ads-content-expert，分析内容质量。完成后输出：
+```
+  [5/8] Content done (score: XX) → launching Traffic...
+```
+
+**第 2 个 — Traffic（8%）**
+启动 ads-traffic-expert，分析流量质量。完成后输出：
+```
+  [6/8] Traffic done (score: XX) → launching AdPlacement...
+```
+
+**第 3 个 — AdPlacement（10%）**
+启动 ads-adplacement-expert，评估广告位规划。完成后输出：
+```
+  [7/8] AdPlacement done (score: XX) → launching Legal...
+```
+
+**第 4 个 — Legal（7%）**
+启动 ads-legal-expert，审查法律页面。完成后输出：
+```
+  [8/8] Legal done (score: XX) → all agents complete.
+```
+
+每个 agent 的 prompt 内容和输出路径与并行路径一致。失败处理规则不变（重试一次，再失败写降级 report.json）。
+
 ---
 
 ## 规则
 
-- **每批 4 个调用必须在同一轮发送，并行执行。两批之间串行，等第一批全部完成后再发第二批。**
+- **所有 agent 必须遵守上方「Agent 进度上报规范」**：在每个关键步骤（init → fetching → analyzing → scoring → writing）使用 Write 工具更新 `<assigned_dir>/status.json`。AIT 仪表盘据此显示实时进度。
+- **第一批始终 4 并行**。第二批根据并行度检测结果自动选择路径：`BATCH1_ELAPSED <= 300` → 4 并行；`> 300` → 逐个串行。
+- 串行路径下，每个 agent 完成后立即输出进度并启动下一个，不要让用户面对长时间无反馈的等待。
 - 如果有 agent 失败或超时，**单独对该 agent 重试一次**。重试时精简 prompt，仅保留核心指令和输出路径。
 - 若重试仍失败，汇总阶段为该专家写 score:0, status:"failed" 的备用 report.json。
 - **不要因为单个 agent 失败而阻塞整体审计。**

@@ -93,7 +93,7 @@ color: magenta
 你必须使用 **Write** 工具保存报告。不要使用 Bash（`echo`、`cat`、`tee` 等）写入文件。
 
 1. 直接使用 Write 工具写入 `report.json`，写入路径为 `<assigned_output_dir>/report.json`。Write 工具会自动创建缺失的目录，无需手动 mkdir。
-2. 确保只写入 `report.json` 这一个文件。
+2. 写入 `report.json`（最终报告）和 `status.json`（进度心跳，每次关键步骤更新一次）。
 3. 文件内容必须是符合以下模式的合法 JSON。
 4. 不要写入 Markdown（`.md`）文件、文本文件或任何其他格式。
 
