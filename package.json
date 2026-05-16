@@ -1,22 +1,18 @@
 {
   "name": "adsense-lint",
-  "version": "0.1.2",
-  "description": "Check if your website meets Google AdSense approval requirements",
-  "type": "module",
-  "main": "dist/cli.js",
+  "version": "0.2.0",
+  "description": "AdSense multi-expert AI review system — install skills & agents for Claude Code / Cursor",
+  "main": "bin/adsense-lint.js",
   "bin": {
     "adsense-lint": "bin/adsense-lint.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "lint": "echo 'No linter configured'",
     "test": "echo 'No tests configured'"
   },
   "files": [
-    "dist",
     "bin",
-    "templates",
+    "lib",
+    "assets",
     "README.md",
     "LICENSE"
   ],
@@ -24,7 +20,10 @@
     "adsense",
     "google",
     "lint",
-    "cli"
+    "cli",
+    "claude",
+    "cursor",
+    "ai-agent"
   ],
   "repository": {
     "type": "git",
@@ -37,14 +36,11 @@
   "author": "lococao <loco97642110@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
+    "@inquirer/prompts": "^8.4.3",
     "commander": "^12.1.0",
-    "fast-glob": "^3.3.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20.14.0",
-    "typescript": "^5.4.5"
+    "node-pty": "^1.1.0"
   }
 }

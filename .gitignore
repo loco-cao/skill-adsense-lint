@@ -31,3 +31,4 @@ test-bad/
 .tmp/
 
 docs/
+.adsense-lint/
