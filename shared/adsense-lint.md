@@ -30,11 +30,26 @@
 
 ## 会话设置
 
-为此审计会话创建一个本地工作目录：
+为此审计会话定义一个本地工作目录：
 
 ```
 SESSION_DIR=".adsense-lint/session-$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$SESSION_DIR"/{01-policy,02-eeat,03-content,04-cookie,05-traffic,06-adplacement,07-tech,08-legal,99-summary}
+```
+
+无需手动创建子目录。所有专家 agent 和汇总阶段均使用 Write 工具写入文件，Write 工具会自动创建缺失的目录。
+
+目录结构预期：
+```
+SESSION_DIR/
+├── 01-policy/
+├── 02-eeat/
+├── 03-content/
+├── 04-cookie/
+├── 05-traffic/
+├── 06-adplacement/
+├── 07-tech/
+├── 08-legal/
+└── 99-summary/
 ```
 
 ---
@@ -64,58 +79,71 @@ mkdir -p "$SESSION_DIR"/{01-policy,02-eeat,03-content,04-cookie,05-traffic,06-ad
 
 ---
 
-## 编排 — 直接并行启动 8 位专家
+## 编排 — 分两批并行启动 8 位专家
 
-**这是最关键的步骤。不要使用中间协调 agent！直接在当前上下文中并行启动全部 8 位专家。**
+**这是最关键的步骤。不要使用中间协调 agent！直接在当前上下文中分批并行启动 8 位专家。**
 
-**必须在同一轮 tool calls 中，一次性发出全部 8 个调用。**
+为避免单次并行过多导致 timeout，将 8 位专家分为两批，每批 4 个。第一批完成后立即启动第二批。
+
+### 第一批（轻量/中等负载）
+
+在同一轮 tool calls 中并行发出以下 4 个调用：
 
 | 专家 | 角色 | 权重 |
 |------|------|------|
 | Policy | 政策审查（有否决权） | 22% |
 | E-E-A-T | 权威度评估 | 17% |
-| Content | 内容质量 | 15% |
 | Cookie | Cookie 合规 | 13% |
-| AdPlacement | 广告位规划 | 10% |
-| Traffic | 流量质量 | 8% |
 | Tech | 技术合规 | 8% |
-| Legal | 法律页面 | 7% |
 
-### 远程模式 — 各专家提示要点
+**远程模式提示要点：**
 
 1. **Policy** — 审查 `<url>`。将结果写入 `<SESSION_DIR>/01-policy/report.json`。评分 0-100。输出合法 JSON，字段：expert, score, maxScore, weight, status, findings[], summary。每个 finding 必须有 severity/category/title/description/evidence/recommendation。
 
 2. **E-E-A-T** — 评估 `<url>` 的 E-E-A-T 信号。将结果写入 `<SESSION_DIR>/02-eeat/report.json`。评分 0-100。
 
-3. **Content** — 分析 `<url>` 的内容质量。将结果写入 `<SESSION_DIR>/03-content/report.json`。评分 0-100。
+3. **Cookie** — 检查 `<url>` 的 Cookie/GDPR 合规性。将结果写入 `<SESSION_DIR>/04-cookie/report.json`。评分 0-100。
 
-4. **Cookie** — 检查 `<url>` 的 Cookie/GDPR 合规性。将结果写入 `<SESSION_DIR>/04-cookie/report.json`。评分 0-100。
+4. **Tech** — 检查 `<url>` 的技术合规性。将结果写入 `<SESSION_DIR>/07-tech/report.json`。评分 0-100。
 
-5. **Traffic** — 分析 `<url>` 的流量质量。将结果写入 `<SESSION_DIR>/05-traffic/report.json`。评分 0-100。
+**本地模式提示要点：**
 
-6. **AdPlacement** — 评估 `<url>` 的广告位规划。将结果写入 `<SESSION_DIR>/06-adplacement/report.json`。评分 0-100。
+1. **Policy** — 扫描 `<project_path>` 中所有 HTML/JSX/TSX/Vue/Markdown 文件。查找：禁止内容、隐藏文本、关键词堆砌、门页、重复内容。写入 `<SESSION_DIR>/01-policy/report.json`。
 
-7. **Tech** — 检查 `<url>` 的技术合规性。将结果写入 `<SESSION_DIR>/07-tech/report.json`。评分 0-100。
+2. **E-E-A-T** — 分析 `<project_path>` 中 about/contact/作者页面。检查占位邮箱、模板变量、虚假地址、过时版权、品牌一致性。写入 `<SESSION_DIR>/02-eeat/report.json`。
+
+3. **Cookie** — 扫描 `<project_path>` 中的 JS/TS/JSX 文件。搜索 Cookie 同意实现、已知 Consent 库、Google 同意模式、预同意跟踪检查。写入 `<SESSION_DIR>/04-cookie/report.json`。
+
+4. **Tech** — 分析 `<project_path>`。检查 HTTPS 配置、viewport meta、图片尺寸、alt 文本、robots.txt、sitemap.xml、可疑脚本、安全头。写入 `<SESSION_DIR>/07-tech/report.json`。
+
+### 第二批（重负载）
+
+等待第一批全部完成后，在同一轮 tool calls 中并行发出以下 4 个调用：
+
+| 专家 | 角色 | 权重 |
+|------|------|------|
+| Content | 内容质量 | 15% |
+| Traffic | 流量质量 | 8% |
+| AdPlacement | 广告位规划 | 10% |
+| Legal | 法律页面 | 7% |
+
+**远程模式提示要点：**
+
+5. **Content** — 分析 `<url>` 的内容质量。将结果写入 `<SESSION_DIR>/03-content/report.json`。评分 0-100。
+
+6. **Traffic** — 分析 `<url>` 的流量质量。将结果写入 `<SESSION_DIR>/05-traffic/report.json`。评分 0-100。
+
+7. **AdPlacement** — 评估 `<url>` 的广告位规划。将结果写入 `<SESSION_DIR>/06-adplacement/report.json`。评分 0-100。
 
 8. **Legal** — 审查 `<url>` 的法律页面。将结果写入 `<SESSION_DIR>/08-legal/report.json`。评分 0-100。
 
-### 本地模式 — 各专家提示要点
+**本地模式提示要点：**
 
-`<project_path>` 为当前工作目录的绝对路径。每位专家使用 Read/Grep 分析本地文件，不使用 WebFetch。
+5. **Content** — 分析 `<project_path>` 中的内容文件。检查：每页字数（<300）、占位文本、AI 写作痕迹（3 处以上）、图片 alt 缺失、库存照片文件名、title/meta/h1 存在性。写入 `<SESSION_DIR>/03-content/report.json`。
 
-1. **Policy** — 扫描 `<project_path>` 中所有 HTML/JSX/TSX/Vue/Markdown 文件。查找：禁止内容（成人、暴力、仇恨言论、毒品、武器）、隐藏文本（display:none visibility:hidden color:transparent font-size:0）、关键词堆砌（单词密度 >8%）、门页（有意义内容 <50 词）、重复内容（页面间相似度 >75%）。写入 `<SESSION_DIR>/01-policy/report.json`。
+6. **Traffic** — 分析 `<project_path>`。检查参与信号（评论组件、社交按钮、订阅表单）、危险信号（流量交换脚本、自动刷新、点击诱饵）。写入 `<SESSION_DIR>/05-traffic/report.json`。
 
-2. **E-E-A-T** — 分析 `<project_path>` 中 about/contact/作者页面。检查占位邮箱（@example.com @test.com）、模板变量（{{company}} {{date}}）、虚假地址、过时版权、品牌一致性。写入 `<SESSION_DIR>/02-eeat/report.json`。
-
-3. **Content** — 分析 `<project_path>` 中的内容文件。检查：每页字数（<300）、占位文本、AI 写作痕迹（3 处以上）、图片 alt 缺失、库存照片文件名、title/meta/h1 存在性。写入 `<SESSION_DIR>/03-content/report.json`。
-
-4. **Cookie** — 扫描 `<project_path>` 中的 JS/TS/JSX 文件。搜索 Cookie 同意实现、已知 Consent 库、Google 同意模式、预同意跟踪检查。写入 `<SESSION_DIR>/04-cookie/report.json`。
-
-5. **Traffic** — 分析 `<project_path>`。检查参与信号（评论组件、社交按钮、订阅表单）、危险信号（流量交换脚本、自动刷新、点击诱饵）。写入 `<SESSION_DIR>/05-traffic/report.json`。
-
-6. **AdPlacement** — 扫描 `<project_path>` 中的 HTML/JSX/Vue 文件。统计 `<ins class='adsbygoogle'>` 数量、移动端广告数 ≤2、检查与交互元素的间距、标记禁止位置。写入 `<SESSION_DIR>/06-adplacement/report.json`。
-
-7. **Tech** — 分析 `<project_path>`。检查 HTTPS 配置、viewport meta、图片尺寸、alt 文本、robots.txt、sitemap.xml、可疑脚本、安全头。写入 `<SESSION_DIR>/07-tech/report.json`。
+7. **AdPlacement** — 扫描 `<project_path>` 中的 HTML/JSX/Vue 文件。统计 `<ins class='adsbygoogle'>` 数量、移动端广告数 ≤2、检查与交互元素的间距、标记禁止位置。写入 `<SESSION_DIR>/06-adplacement/report.json`。
 
 8. **Legal** — 检查 `<project_path>` 中的法律页面（privacy/terms/about/contact）。检查必需页面存在性、条款深度、DMCA、真实联系信息。写入 `<SESSION_DIR>/08-legal/report.json`。
 
@@ -123,10 +151,10 @@ mkdir -p "$SESSION_DIR"/{01-policy,02-eeat,03-content,04-cookie,05-traffic,06-ad
 
 ## 规则
 
-- **所有 8 个调用必须在同一轮发送，并行执行。不得逐个串行。**
-- 每个 agent 独立运行，超时约 120 秒。
-- 如果有 agent 失败或超时，不要阻塞整体审计。汇总阶段为该专家写 score:0, status:"failed" 的备用 report.json。
-- 失败不阻塞整体审计。
+- **每批 4 个调用必须在同一轮发送，并行执行。两批之间串行，等第一批全部完成后再发第二批。**
+- 如果有 agent 失败或超时，**单独对该 agent 重试一次**。重试时精简 prompt，仅保留核心指令和输出路径。
+- 若重试仍失败，汇总阶段为该专家写 score:0, status:"failed" 的备用 report.json。
+- **不要因为单个 agent 失败而阻塞整体审计。**
 
 ---
 

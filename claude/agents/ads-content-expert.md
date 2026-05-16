@@ -100,11 +100,8 @@ color: yellow
 
 你必须使用 **Write** 工具保存报告。不要使用 Bash（`echo`、`cat`、`tee` 等）写入文件。
 
-1. 确保输出目录存在。若不存在，先创建：
-   ```bash
-   mkdir -p <assigned_output_dir>
-   ```
-2. 在指定输出目录中写入名为 `report.json` 的单个文件。
+1. 直接使用 Write 工具写入 `report.json`，写入路径为 `<assigned_output_dir>/report.json`。Write 工具会自动创建缺失的目录，无需手动 mkdir。
+2. 确保只写入 `report.json` 这一个文件。
 3. 文件内容必须是符合以下模式的合法 JSON。
 4. 不要写入 Markdown（`.md`）文件、文本文件或任何其他格式。
 

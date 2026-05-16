@@ -56,13 +56,9 @@ Run: npx adsense-lint install
 
 ### 1. 初始化会话
 
-在启动任何智能体之前，先创建会话目录及所有子目录：
+定义会话目录路径。无需手动创建子目录 —— Write 工具写入文件时会自动创建缺失的目录。
 
-```bash
-mkdir -p "$SESSION_DIR"/{01-policy,02-eeat,03-content,04-cookie,05-traffic,06-adplacement,07-tech,08-legal,99-summary}
-```
-
-验证目录结构：
+验证预期目录结构：
 
 ```
 SESSION_DIR/
@@ -83,44 +79,49 @@ SESSION_DIR/
 
 | 限制 | 值 | 用途 |
 |------|------|------|
-| 单智能体超时 | **120 秒** | 超过 2 分钟未完成的专家将被终止 |
-| 全局批次超时 | **600 秒** | 整个审计超过 10 分钟将被终止 |
+| 全局批次超时 | **1200 秒** | 整个审计超过 20 分钟将被终止 |
 | 单次请求超时 | **15 秒** | 专家内部 WebFetch/curl 超时 |
 | 重试次数 | **1 次** | 每个失败/超时的智能体立即重试一次 |
 | 重试退避 | **3 秒** | 重试失败智能体前的等待时间 |
 
-### 3. 并行调度（含超时与重试）
+### 3. 分两批并行调度（含超时与重试）
 
-**你必须立即、在同一轮 tool calls 中使用 `Agent` 工具同时启动全部 8 位专家。不得逐个串行执行。**
+为避免单次并行过多导致 timeout，将 8 位专家分为两批，每批 4 个。第一批完成后立即启动第二批。
 
-在单条消息中并行发起以下 8 个 Agent 调用：
+**第一批（轻量/中等负载）— 在同一轮中并行发出：**
 
 ```
 Agent(subagent_type="ads-policy-expert",     description="Policy audit",     prompt="审查目标网站 <url>。将结果以 report.json 写入 <session_dir>/01-policy/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
 Agent(subagent_type="ads-eeat-expert",       description="E-E-A-T audit",   prompt="评估目标网站 <url> 的 E-E-A-T 信号。将结果以 report.json 写入 <session_dir>/02-eeat/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
-Agent(subagent_type="ads-content-expert",    description="Content audit",   prompt="分析目标网站 <url> 的内容质量。将结果以 report.json 写入 <session_dir>/03-content/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
 Agent(subagent_type="ads-cookie-expert",     description="Cookie audit",    prompt="检查目标网站 <url> 的 Cookie 合规性。将结果以 report.json 写入 <session_dir>/04-cookie/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
+Agent(subagent_type="ads-tech-expert",       description="Tech audit",      prompt="检查目标网站 <url> 的技术合规性。将结果以 report.json 写入 <session_dir>/07-tech/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
+```
+
+**第二批（重负载）— 第一批全部完成后，在同一轮中并行发出：**
+
+```
+Agent(subagent_type="ads-content-expert",    description="Content audit",   prompt="分析目标网站 <url> 的内容质量。将结果以 report.json 写入 <session_dir>/03-content/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
 Agent(subagent_type="ads-traffic-expert",    description="Traffic audit",   prompt="分析目标网站 <url> 的流量质量。将结果以 report.json 写入 <session_dir>/05-traffic/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
 Agent(subagent_type="ads-adplacement-expert",description="AdPlacement audit",prompt="评估目标网站 <url> 的广告位规划。将结果以 report.json 写入 <session_dir>/06-adplacement/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
-Agent(subagent_type="ads-tech-expert",       description="Tech audit",      prompt="检查目标网站 <url> 的技术合规性。将结果以 report.json 写入 <session_dir>/07-tech/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
 Agent(subagent_type="ads-legal-expert",      description="Legal audit",     prompt="审查目标网站 <url> 的法律页面。将结果以 report.json 写入 <session_dir>/08-legal/report.json。评分 0-100。输出合法 JSON，包含 score、findings 数组、summary。")
 ```
 
 **重要提示：**
-- **所有 8 个 Agent 调用必须在同一轮发送** — 不要等待第一个完成再发送下一个。
+- **每批 4 个 Agent 调用必须在同一轮发送** — 不要等待第一个完成再发送下一个。
+- 两批之间串行，等第一批全部完成后再发第二批。
 - 每位专家会自动处理超时和重试。
 - 如果某位专家超时或失败，不要等待它 — 在汇总阶段写入 fallback report.json（score:0, status:"failed"）。
 
 **重试策略：**
-- 若某位专家在 120 秒内未完成，等待 3 秒后**重试一次**。
+- 若某位专家超时未完成，等待 3 秒后**重试一次**。
 - 若重试仍失败，为该专家写入备用 `report.json`：
   - `score: 0`
   - `status: "failed"`
   - 一条严重级别为 `critical` 的发现，标题为 `审计执行失败`，描述说明失败原因。
 - **不要因为单个智能体失败而阻塞整个审计**。
 
-**全局超时（600 秒）：**
-- 在启动第一批专家时开始 10 分钟计时。
+**全局超时（1200 秒）：**
+- 在启动第一批专家时开始 20 分钟计时。
 - 若超时触发，将未完成的专家标记为 `failed`，`score: 0`。
 - 立即使用已有报告继续汇总。
 

@@ -25,31 +25,39 @@
 
 ## 1. 初始化
 
-创建会话目录：
+定义会话目录：
 
 ```bash
 SESSION_DIR=".adsense-lint/session-$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$SESSION_DIR"/{01-policy,02-eeat,03-content,04-cookie,05-traffic,06-adplacement,07-tech,08-legal,99-summary}
 ```
 
-## 2. 并行审查
+无需手动创建子目录。Write 工具写入文件时会自动创建缺失的目录。
 
-使用 Agent 工具同时启动全部 8 位专家：
+## 2. 分两批并行审查
+
+为避免单次并行过多导致 timeout，将 8 位专家分为两批，每批 4 个。
+
+**第一批（轻量/中等负载）— 并行启动：**
 
 | 专家 | 输出路径 |
 |--------|-------------|
 | @ads-policy-expert | 01-policy/report.json |
 | @ads-eeat-expert | 02-eeat/report.json |
-| @ads-content-expert | 03-content/report.json |
 | @ads-cookie-expert | 04-cookie/report.json |
+| @ads-tech-expert | 07-tech/report.json |
+
+**第二批（重负载）— 第一批全部完成后并行启动：**
+
+| 专家 | 输出路径 |
+|--------|-------------|
+| @ads-content-expert | 03-content/report.json |
 | @ads-traffic-expert | 05-traffic/report.json |
 | @ads-adplacement-expert | 06-adplacement/report.json |
-| @ads-tech-expert | 07-tech/report.json |
 | @ads-legal-expert | 08-legal/report.json |
 
 ## 3. 等待完成
 
-轮询直到全部 8 个 `report.json` 文件存在。如果有专家在重试一次后仍失败，记分为 0 并记录失败。
+轮询直到全部 8 个 `report.json` 文件存在。每批内并行，批次间串行。如果有专家在重试一次后仍失败，记分为 0 并记录失败。
 
 ## 4. 分数汇总
 
