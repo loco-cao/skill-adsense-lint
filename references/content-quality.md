@@ -16,27 +16,105 @@
 - `sample text`
 
 ## AI 写作模式检测
-表示 AI 生成内容的陈词滥调。如果全站出现 3 种以上不同实例，则标记：
 
-- "in conclusion"
-- "it is important to note"
-- "it is worth noting"
-- "it should be noted"
-- "delve into"
-- "navigate the complexities"
-- "landscape of"
-- "tapestry of"
-- "multifaceted"
-- "ever-evolving"
-- "crucial"
-- "paramount"
-- "underscores the importance"
-- "serves as a testament"
-- "a myriad of"
-- "plethora of"
-- "robust"
-- "holistic"
-- "seamless"
+### 英文 AI 陈词滥调
+
+表示 AI 生成内容的陈词滥调。如果全站出现 3 种以上不同实例，则标记。
+
+**AI 连接词与修饰语：**
+- "in conclusion"、"it is important to note"、"it is worth noting"、"it should be noted"
+- "delve into"、"navigate the complexities"、"underscores the importance"、"serves as a testament"
+- "a myriad of"、"plethora of"、"robust"、"holistic"、"seamless"
+- "landscape of"、"tapestry of"、"multifaceted"、"ever-evolving"、"crucial"、"paramount"
+
+**AI 万能形容词（在网站中出现 5 次以上标记）：**
+- "cutting-edge"、"state-of-the-art"、"unprecedented"、"transformative"
+- "game-changer"、"revolutionary"、"next-generation"、"best-in-class"
+- "world-class"、"industry-leading"、"top-tier"
+
+**AI 模板句式（出现 2 次以上标记）：**
+- "In today's fast-paced world..."
+- "As we navigate the ever-changing landscape..."
+- "Whether you're a beginner or an expert..."
+- "From X to Y, we've got you covered"
+- "X is more than just Y — it's Z"
+- "designed to help you [verb]"
+- "empowering [noun] to [verb]"
+
+### 中文 AI 陈词滥调
+
+**AI 连接词与修饰语（全站出现 3 种以上标记）：**
+- "总而言之"、"综上所述"、"值得注意的是"、"不可否认"
+- "随着...的发展"、"在当今...时代"、"在...日益...的今天"
+- "更好地满足用户需求"、"致力于为用户提供"、"一站式解决方案"
+- "全面提升"、"深入探讨"、"旨在帮助"、"不断提升"
+- "具有重要意义"、"发挥着重要作用"、"不可或缺"
+
+**AI 万能句式（出现 2 次以上标记）：**
+- "随着互联网的快速发展"、"在当今信息化时代"
+- "为...提供了更多可能"、"带来了全新的体验"
+- "让...变得更加便捷高效"、"满足不同用户的需求"
+- "打造...生态体系"、"构建...闭环"
+- "实现...的全面覆盖"、"助力...数字化转型"
+
+### 结构化 AI 痕迹检测
+
+以下结构模式表明 AI 生成内容，全站出现即标记：
+
+- **段落长度均匀**：所有正文段落均为 3-5 句话，无自然长短变化
+- **句式结构单一**：所有句子以相似方式开头（如连续段落均以"通过..."开头）
+- **H2/H3 标题模式化**：所有标题遵循相同语法结构（如全部为"XX 的优势"、"如何 XX"）
+- **每段结尾 CTA**：每个章节末尾都出现号召性用语
+- **列表项结构一致**：所有 bullet point 长度和句式结构完全相同
+- **无任何拼写/语法错误**：完全无错可能是 AI 润色过度的信号
+- **缺乏具体数据**：大量使用"众多"、"大量"、"显著"等模糊量词，无具体数字
+
+## Blog 文章真实性检测
+
+### 真人写作信号（正面指标，得分加分项）
+
+- **第一人称叙述**：使用"我"、"我们"、"笔者的经验"等第一人称
+- **具体时间和地点**：提及具体的日期、城市、活动名称
+- **个人经历**：包含真实的个人故事、项目案例、失败教训
+- **原创观点**：表达独特的、可能引起争议的个人见解
+- **自然语言变化**：语气有起伏，混用正式和口语化表达
+- **真实数据**：包含引用来源的具体数据、统计数字
+- **读者互动**：回应评论、提出问题引发讨论
+- **独特比喻**：使用非模板化的、有个人风格的比喻
+
+### Blog AI 写作指标（负面信号，出现即扣分）
+
+- **完美无瑕的语法**：没有任何口语化表达、缩略词、或不规范标点
+- **百科全书式平铺**：像 Wikipedia 摘要一样罗列事实，无观点无立场
+- **模板式结构**：所有文章均遵循"引言-原因-方法-总结"的机械结构
+- **无具体细节**：讨论问题时没有任何真实案例或具体数据支撑
+- **中文 AI 博客句式**：
+  - "在当今这个信息爆炸的时代..."
+  - "相信很多人都有这样的困惑..."
+  - "那么问题来了..."
+  - "看完这篇文章，相信你已经..."
+  - "以上就是关于...的全部内容"
+  - "希望对大家有所帮助"
+
+### Blog 评分调整
+
+- 如果页面路径匹配 `/blog/`、`/article/`、`/post/`、`/news/`，或页面包含作者署名和发布日期，则判定为 Blog 页面
+- Blog 页面检测到 AI 痕迹时，扣分权重 **加倍**（Blog 是 E-E-A-T 核心页面，AI 痕迹尤其致命）
+- Blog 页面检测到真人写作信号时，可抵消部分其他扣分
+
+## 按页面类型的 AI 检测
+
+### 关于页面
+- **AI 痕迹**："领先的...提供商"、"致力于为客户创造价值"、"拥有一支经验丰富的团队"——无具体创始人姓名、公司故事、实际成就
+- **真人信号**：具体的创始故事、团队的真人照片和姓名、实际的里程碑事件
+
+### 产品/服务页面
+- **AI 痕迹**：统一的"功能-优势-价值"三段式、每个功能用相同句式描述、缺乏具体的性能指标
+- **真人信号**：实际客户案例、具体的技术参数、使用场景描述
+
+### Landing Page
+- **AI 痕迹**：通用的价值主张、模板化的 Hero 文案、"释放你的潜力"类空泛口号
+- **真人信号**：具体的转化数据、真实客户评价（带姓名和头像）
 
 ## 图片可访问性
 - 每个 `<img>` 标签必须有 `alt` 属性
