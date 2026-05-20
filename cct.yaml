@@ -6,7 +6,7 @@ argument-hint: "<url> [--auto] [--local]"
 targets:
   claude:
     trigger: /adsense-lint
-    path: claude/SKILL.md
+    path: SKILL.md
     install:
       - from: SKILL.md
         to: skills/adsense-lint/SKILL.md
