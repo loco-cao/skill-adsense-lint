@@ -2,7 +2,7 @@
 
 > AdSense 多专家 AI 审查系统 — 8 位领域专家并行审计网站或本地项目，输出加权评分和优先级行动计划。
 
-AIT 技能仓库。通过 [ai-terminal](https://github.com/lococao/ai-terminal) CLI 安装和运行，支持 Claude Code 和 Codex CLI。
+AIT 技能仓库。通过 [ai-terminal](https://github.com/lococao/ai-terminal) CLI 安装和运行，支持 Claude Code。
 
 ## 快速开始
 
@@ -13,7 +13,7 @@ ait register gh:lococao/skill-adsense-lint
 # 2. 安装到 AI CLI
 ait install
 # → 选择 adsense-lint
-# → 勾选 Claude Code / Codex CLI
+# → 勾选 Claude Code
 
 # 3. 运行审计
 ait run skills/adsense-lint https://example.com     # 远程网站
@@ -115,7 +115,7 @@ AIT CLI (PTY 伪终端)
   │  自动应答 trust/permission 提示
   │  轮询 report.json 更新仪表盘
   ▼
-AI CLI (Claude Code / Codex)
+AI CLI (Claude Code)
   │  加载 SKILL.md
   ▼
 SKILL.md (直接编排)

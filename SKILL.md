@@ -1,8 +1,7 @@
 ---
 name: adsense-lint
 description: "AdSense 多专家 AI 审查系统 — 全面的网站 AdSense 合规性审计"
-argument-hint: "<url> [--auto] [--local]"
-allowed-tools:
+tools:
   - Read
   - Write
   - Bash

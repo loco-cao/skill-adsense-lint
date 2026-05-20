@@ -8,22 +8,10 @@ targets:
     trigger: /adsense-lint
     path: claude/SKILL.md
     install:
-      - from: claude
-        to: skills/adsense-lint
-      - from: claude/agents
+      - from: SKILL.md
+        to: skills/adsense-lint/SKILL.md
+      - from: agents
         to: agents
-      - from: shared
-        to: skills/adsense-lint/shared
-      - from: references
-        to: skills/adsense-lint/references
-      - from: workflows
-        to: skills/adsense-lint/workflows
-  codex:
-    trigger: adsense-lint
-    path: codex/SYSTEM.md
-    install:
-      - from: codex
-        to: skills/adsense-lint
       - from: shared
         to: skills/adsense-lint/shared
       - from: references

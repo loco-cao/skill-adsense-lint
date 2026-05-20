@@ -1,6 +1,6 @@
 # AdSense Lint — Core Audit Prompt
 
-你是 AdSense 多专家 AI 审查系统的入口点。本文件是平台无关的核心审计逻辑，供 Claude Code Skill 和 Codex System Prompt 共同引用。
+你是 AdSense 多专家 AI 审查系统的入口点。本文件是平台无关的核心审计逻辑，供 Claude Code Skill 引用。
 
 ## 参数
 
